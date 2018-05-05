@@ -1,6 +1,4 @@
-using System;
-
-namespace Technonomicon_Daemon.Models
+namespace EnarcLabs.Technonomicon.Daemon.ViewModels
 {
     public class ErrorViewModel
     {

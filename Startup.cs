@@ -1,49 +1,112 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
-namespace Technonomicon_Daemon
+// ReSharper disable UnusedMember.Global
+
+namespace EnarcLabs.Technonomicon.Daemon
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
+        /// <summary>
+        /// Called during startup. Adds services to the container.
+        /// </summary>
+        /// <param name="services">This method will alter this collection to add the required services.</param>
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+            services.AddSingleton(Configuration);
+
+            services.AddDbContext<IdentityDbContext>(options => options.UseSqlite("Data Source=users.sqlite",
+                optionsBuilder => optionsBuilder.MigrationsAssembly("EnarcLabs.Technonomicon.Daemon")));
+            services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<IdentityDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+                options.Lockout.MaxFailedAccessAttempts = 10;
+                options.Lockout.AllowedForNewUsers = true;
+
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequiredLength = 1;
+
+                options.User.RequireUniqueEmail = true;
+            });
+
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "JwtBearer";
+                    options.DefaultChallengeScheme = "JwtBearer";
+                })
+                .AddJwtBearer("JwtBearer", jwtBearerOptions =>
+                {
+                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetValue<string>("SecretKey"))),
+
+                        ValidateIssuer = false,
+                        ValidIssuer = "",
+
+                        ValidateAudience = false,
+                        ValidAudience = "",
+
+                        ValidateLifetime = true,
+
+                        ClockSkew = TimeSpan.FromMinutes(5)
+                    };
+                });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        /// <summary>
+        /// Called during startup. Sets up the HTTP request pipeline.
+        /// </summary>
+        /// <param name="app">The application builder creating the app.</param>
+        /// <param name="env">The environment we're hosting in.</param>
+        /// <param name="dbContext">Database context for ASP.NET Identity</param>
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IdentityDbContext dbContext)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                dbContext.Database.Migrate();
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseStaticFiles();
+            //Not really needed because this is just a REST api.
+            //app.UseStaticFiles();
+
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
-                    name: "default",
-                    template: "api/{action}",
-                    defaults: new {
+                    "default",
+                    "api/{action}",
+                    new {
                         controller = "Api",
                     });
             });
