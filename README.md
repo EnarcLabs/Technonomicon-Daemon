@@ -1,3 +1,3 @@
 # Technonomicon-Daemon
 
-Base server code for the "Technonomicon" reverse engineering database.
+Base server code for the "Technonomicon" reverse engineering grimoire.
