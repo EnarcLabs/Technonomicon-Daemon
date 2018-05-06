@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using EnarcLabs.Technonomicon.Daemon.MessageService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -76,6 +77,8 @@ namespace EnarcLabs.Technonomicon.Daemon
                         ClockSkew = TimeSpan.FromMinutes(5)
                     };
                 });
+
+            services.AddTransient<IMessageService, DebugMessageService>();
         }
 
         /// <summary>
