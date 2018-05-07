@@ -7,6 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Artwork\**" />
+    <Compile Remove="Documentation\**" />
+    <Content Remove="Artwork\**" />
+    <Content Remove="Documentation\**" />
+    <EmbeddedResource Remove="Artwork\**" />
+    <EmbeddedResource Remove="Documentation\**" />
+    <None Remove="Artwork\**" />
+    <None Remove="Documentation\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove=".gitignore" />
+    <None Remove="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.0.2" />
