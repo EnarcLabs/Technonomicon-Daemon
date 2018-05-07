@@ -80,7 +80,7 @@
             \end{itemize}
             \subsubsection{Description}
                 Authenticates a user and produces a JWT token that can be used to validate subsequent API calls.
-                To use this token on functions which require authorization, add an HTTP header called "Authorization" with the value of "Bearer", a space, and the received JWT token to all requests.
+                To use this token on functions which require authorization, add an HTTP header called ``Authorization'' with the value of ``Bearer'', a space, and the received JWT token to all requests.
                 By default, this token is valid for 1 day, after which the caller must call /api/token again to receive a new token.
     \section{Data Model Manipulation}
         These calls allow the retrieval and alteration of data model objects, like users, posts, tags, and events.
