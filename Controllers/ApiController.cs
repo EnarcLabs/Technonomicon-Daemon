@@ -1,12 +1,12 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Net;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using EnarcLabs.Technonomicon.Daemon.MessageService;
+using EnarcLabs.Technonomicon.Daemon.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,15 +21,17 @@ namespace EnarcLabs.Technonomicon.Daemon.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IMessageService _messageService;
+        private readonly TechnonomiconDbContext _technonomiconDbContext;
 
-        private string CurrentUsername => User.FindFirst(ClaimTypes.Name).Value;
+        private string CurrentUsername => base.User.FindFirst(ClaimTypes.Name).Value;
 
-        public ApiController(IConfiguration configuration, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IMessageService messageService)
+        public ApiController(IConfiguration configuration, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IMessageService messageService, TechnonomiconDbContext technonomiconDbContext)
         {
             _configuration = configuration;
             _userManager = userManager;
             _signInManager = signInManager;
             _messageService = messageService;
+            _technonomiconDbContext = technonomiconDbContext;
         }
 
         [AllowAnonymous]
@@ -80,20 +82,25 @@ namespace EnarcLabs.Technonomicon.Daemon.Controllers
                     errors = result.Errors.Select(x => x.Description).ToArray()
                 });
 
-            return Json(new {success = true});
+            var usr = await _userManager.FindByNameAsync(username);
+            var tUsr = new User
+            {
+                Email = usr.Email,
+                Username = usr.UserName,
+                UserId = Guid.NewGuid()
+            };
+            _technonomiconDbContext.Users.Add(tUsr);
+            _technonomiconDbContext.SaveChanges();
+
+            return Json(new { success = true, user = tUsr });
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
-        public IActionResult Item(int? id = null)
+        public new async Task<IActionResult> User(Guid id)
         {
-            if(id != null)
-                return Json(new { message = $"Here's your item: {id.Value}" });
-
-            return Json(new []{
-                new { message = "I am an object!" },
-                new { message = "Me too!" }
-            });
+            var usr = await _technonomiconDbContext.Users.FindAsync(id);
+            return Json(usr);
         }
 
         private string GenerateToken(string username)
