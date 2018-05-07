@@ -22,7 +22,9 @@
             This document intends to describe every possible interaction with the REST API, as well as provide some useful example pseudocode.
             To see usage information for reference bindings for various languages, consult the binding repository or, if present, the package's man page.
 
-    \section{API Call Reference}
+    \section{User Creation and Authentication}
+        These calls are for creating users and retrieving authentication tokens.
+
         \subsection{/api/register}
             \begin{itemize}
                 \item HTTP Verb: POST
@@ -80,5 +82,24 @@
                 Authenticates a user and produces a JWT token that can be used to validate subsequent API calls.
                 To use this token on functions which require authorization, add an HTTP header called "Authorization" with the value of "Bearer", a space, and the received JWT token to all requests.
                 By default, this token is valid for 1 day, after which the caller must call /api/token again to receive a new token.
-            
+    \section{Data Model Manipulation}
+        These calls allow the retrieval and alteration of data model objects, like users, posts, tags, and events.
+
+        \subsection{/api/user}
+            \begin{itemize}
+                \item HTTP Verb: GET
+                \item Authorization Required: No
+                \item Parameters:
+                \begin{itemize}
+                    \item id - GUID - The unique ID of the user to get information for.
+                \end{itemize}
+                \item Response:
+                \begin{itemize}
+                    \item userId - GUID - The unique ID of the specified user.
+                    \item username - String - The specified user's username.
+                    \item email - String - The specified user's email.
+                \end{itemize}
+            \end{itemize}
+            \subsubsection{Description}
+                Retrieve information about a user using a GUID, including their username and email.
 \end{document}
