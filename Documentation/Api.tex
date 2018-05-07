@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+
+\title{Technonomicon API Documentation}
+\author{Olivia Trewin}
+\date{\today\\ \normalsize Version 0.1}
+
+\begin{document}
+
+    \maketitle
+
+    \section{Introduction}
+        The Technonomicon is a reverse-engineering grimoire.
+        It allows the public to view and create records of reverse engineering efforts and results.
+        These records are organized to make browsing easier and facilitate teamwork on complex reverse-engineering problems.
+
+        \subsection{High-level Overview}
+            Interface with the Technonomicon is done using a REST API, which uses JWT tokens for authentication.
+            Users are identified with a username, use their email for password resets, and have a user-specified password which can be used to receive an API token.
+            All interactions with the API are stateless, in keeping with REST practices.
+        
+        \subsection{Purpose of this Document}
+            This document intends to describe every possible interaction with the REST API, as well as provide some useful example pseudocode.
+            To see usage information for reference bindings for various languages, consult the binding repository or, if present, the package's man page.
+
+    \section{API Call Reference}
+        \subsection{/api/register}
+            \begin{itemize}
+                \item HTTP Verb: POST
+                \item Authorization Required: No
+                \item Parameters:
+                \begin{itemize}
+                    \item username - String - The username of the user to register.
+                    \item email - String - The email of the user to register.
+                    \item password - String - The password of the user to register.
+                \end{itemize}
+                \item Response:
+                \begin{itemize}
+                    \item success - Boolean - True if registration succeeded, false otherwise.
+                    \item errors - String[] - A list of errors that caused the registration to fail. Undefined if the registration succeeded.
+                \end{itemize}
+            \end{itemize}
+            \subsubsection{Description}
+                Attempts to register a new user with the specified username, email, and password. If this succeeds, it will send a validation email to the specified address.
+                This should be followed with a call to /api/validate once the end user receives the validation token.
+            
+        \subsection{/api/validate}
+            \begin{itemize}
+                \item HTTP Verb: POST
+                \item Authorization Required: No
+                \item Parameters:
+                \begin{itemize}
+                    \item username - String - The username of the user to register.
+                    \item emailToken - String - The validation token the user received in their email.
+                \end{itemize}
+                \item Response:
+                \begin{itemize}
+                    \item success - Boolean - True if registration succeeded, false otherwise.
+                    \item errors - String[] - A list of errors that caused the registration to fail. Undefined if the registration succeeded.
+                \end{itemize}
+            \end{itemize}
+            \subsubsection{Description}
+                Attempts to validate the user's email address. After this call succeeds, the user is allowed to receive API tokens and call further functions.
+    
+        \subsection{/api/token}
+            \begin{itemize}
+                \item HTTP Verb: POST
+                \item Authorization Required: No
+                \item Parameters:
+                \begin{itemize}
+                    \item username - String - The username of the user to get a token for.
+                    \item password - String - The user's password.
+                \end{itemize}
+                \item Response:
+                \begin{itemize}
+                    \item On success: A valid JWT token.
+                    \item On failure: A 400 Bad Request response.
+                \end{itemize}
+            \end{itemize}
+            \subsubsection{Description}
+                Authenticates a user and produces a JWT token that can be used to validate subsequent API calls.
+                To use this token on functions which require authorization, add an HTTP header called "Authorization" with the value of "Bearer", a space, and the received JWT token to all requests.
+                By default, this token is valid for 1 day, after which the caller must call /api/token again to receive a new token.
+            
+\end{document}
