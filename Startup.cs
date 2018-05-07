@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using EnarcLabs.Technonomicon.Daemon.MessageService;
+using EnarcLabs.Technonomicon.Daemon.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -32,6 +33,10 @@ namespace EnarcLabs.Technonomicon.Daemon
             services.AddMvc();
 
             services.AddSingleton(Configuration);
+
+            services.AddDbContext<TechnonomiconDbContext>(options =>
+                options.UseSqlite("Data Source=technonomicon.sqlite",
+                    optionsBuilder => optionsBuilder.MigrationsAssembly("EnarcLabs.Technonomicon.Daemon")));
 
             services.AddDbContext<IdentityDbContext>(options => options.UseSqlite("Data Source=users.sqlite",
                 optionsBuilder => optionsBuilder.MigrationsAssembly("EnarcLabs.Technonomicon.Daemon")));
@@ -87,12 +92,14 @@ namespace EnarcLabs.Technonomicon.Daemon
         /// <param name="app">The application builder creating the app.</param>
         /// <param name="env">The environment we're hosting in.</param>
         /// <param name="dbContext">Database context for ASP.NET Identity</param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IdentityDbContext dbContext)
+        /// <param name="tDbContext">Database context for the Technonomicon.</param>
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IdentityDbContext dbContext, TechnonomiconDbContext tDbContext)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 dbContext.Database.Migrate();
+                tDbContext.Database.Migrate();
             }
             else
             {
